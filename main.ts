@@ -8,6 +8,7 @@ const urlM = Deno.env.get("MONGO_URL")
 if(!urlM){
     throw new Error("Mongo url not found")
 }
+
 //Mongo
 const client = new MongoClient(urlM);
 await client.connect();
