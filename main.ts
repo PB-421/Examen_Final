@@ -39,7 +39,7 @@ async function handler(req: Request):Promise<Response> {
       return new Response("Hola")
     }
   } else if(metodo === "POST"){
-    await collection.insertOne({})
+    
   } else if(metodo === "PUT"){
 
   } else if(metodo === "DELETE"){
