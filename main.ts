@@ -3,6 +3,7 @@ import { startStandaloneServer } from "@apollo/server/standalone";
 import { schema } from "./schema.ts";
 import { resolvers } from "./resolvers.ts";
 import {MongoClient} from "mongodb"
+import { restaurantModel } from "./types.ts";
 
 const urlM = Deno.env.get("MONGO_URL")
 if(!urlM){
@@ -14,7 +15,7 @@ const client = new MongoClient(urlM);
 await client.connect();
 console.log('Connected successfully to server');
 const db = client.db("BBDDExamenFinal");
-const collection = db.collection("Prueba");
+const restaurantCollection = db.collection<restaurantModel>("Restaurantes");
 
 //GraphQL
 const server = new ApolloServer({
@@ -23,30 +24,8 @@ const server = new ApolloServer({
 });
 
 const { url } = await startStandaloneServer(server, {
-  listen: { port: 8080 }, context: async () => await ({collection})
+  listen: { port: 8080 }, context: async () => await ({restaurantCollection})
 });
 
 console.log(`Server running on: ${url}`);
 
-/* //API REST
-async function handler(req: Request):Promise<Response> {
-  const metodo = req.method
-  const url = new URL(req.url)
-  const path = url.pathname
-
-  if(metodo === "GET"){
-    if(path === "/test"){
-      return new Response("Hola")
-    }
-  } else if(metodo === "POST"){
-    
-  } else if(metodo === "PUT"){
-
-  } else if(metodo === "DELETE"){
-
-  }
-  return new Response("Method not found",{status: 404})
-}
-
-Deno.serve({port: 8080},handler)
-*/
