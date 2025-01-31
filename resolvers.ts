@@ -2,14 +2,33 @@ import { Collection } from "mongodb";
 import { restaurantModel } from "./types.ts";
 import { GraphQLError } from "graphql";
 import { conseguirHora, conseguirTemperatura, geolocalizar, verificarTelefono } from "./apiFunctions.ts";
+import { ObjectId } from "mongodb";
 
 type Context = {
     restaurantCollection: Collection<restaurantModel>
 }
 
+type Datos = {
+    nombre: string,
+    direccion: string,
+    ciudad: string,
+    telefono: string
+}
+
 export const resolvers = {
+    Query: {
+        getRestaurants: async (_:unknown,args:{ciudad: string},context: Context):Promise<restaurantModel[]> => {
+            const restaurantesEnCiudad = await context.restaurantCollection.find({ciudad: args.ciudad}).toArray()
+            return restaurantesEnCiudad
+        },
+        getRestaurant: async (_:unknown,args:{id: string},context: Context):Promise<restaurantModel | null> => {
+            const restauranteEncontrado = await context.restaurantCollection.findOne({_id: new ObjectId(args.id)})
+            if(!restauranteEncontrado) return null
+            return restauranteEncontrado
+        }
+    },
     Mutation: {
-        addRestaurant: async (_:unknown,args: {nombre: string, direccion: string, ciudad: string, telefono: string},context: Context):Promise<restaurantModel> => {
+        addRestaurant: async (_:unknown,args: Datos,context: Context):Promise<restaurantModel> => {
             const telefonoEncontrado = await context.restaurantCollection.findOne({telefono: args.telefono})
             if(telefonoEncontrado) throw new GraphQLError("El telefono ya esta en uso")
             const countrySpecs = await verificarTelefono(args.telefono)
@@ -31,6 +50,11 @@ export const resolvers = {
                 telefono: args.telefono,
                 timezone: countrySpecs.timezone
             }
+        },
+        deleteRestaurant: async (_:unknown,args:{id: string},context: Context):Promise<boolean> => {
+            const {deletedCount} = await context.restaurantCollection.deleteOne({_id: new ObjectId(args.id)})
+            if(deletedCount !== 0) return true
+            return false
         }
     },
     Restaurant: {
